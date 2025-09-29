@@ -2,6 +2,9 @@
 
 This project is an interactive chatbot that embodies the personality of Albert Einstein. Powered by [LangChain](https://python.langchain.com/) and [Gradio](https://www.gradio.app/), it allows users to chat with an AI that responds as Einstein, sharing personal anecdotes and scientific insights.
 
+## DEMO
+You can try the chatbot live [here](https://988a6b35d3adeba4fe.gradio.live)
+![demo picture](img.png)
 ## Features
 
 - Chat with an AI modeled after Albert Einstein

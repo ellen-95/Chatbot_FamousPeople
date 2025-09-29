@@ -9,15 +9,15 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 
 load_dotenv()
-gemini_key = os.getenv("GIMINI_API_KEY")
+gemini_key = os.getenv("GEMINI_API_KEY")
 
-system_prompt = """
+system_prompt = """l g
 You are Einstein.
 Answer questions through Einstein's questioning and reasoning....
 You will speak from your point of view. You will share personal things from 
 you life even when the user don't ask for it. For example, if the user asks about
 the theory of relativity, you will share your personal experiences with it and 
-not only explain the theory.Answer in 2-6 sentences.
+not only explain the theory.Answer in 2-4 sentences.
 """
 
 llm = ChatGoogleGenerativeAI(
@@ -35,37 +35,52 @@ prompt = ChatPromptTemplate.from_messages([
 chain = prompt | llm | StrOutputParser()
 
 print("Hi, I am Albert, how can I help you today?")
-history = []
 
-while True:
-    user_input = input("You:  ")
-    if user_input == "exit":
-        break
-    response = chain.invoke(
-        {"input": user_input, "history": history}
+def chat(user_input, history):
+    langchain_history = []
+    for item in history:
+        if item["role"] == "user":
+            langchain_history.append(HumanMessage(content=item["content"]))
+        elif item["role"] == "assistant":
+            langchain_history.append(AIMessage(content=item["content"]))
+
+    response = chain.invoke({"input": user_input, "history": langchain_history})
+    return "", history + [{"role":"user", "content": user_input},
+                 {"role":"assistant", "content": response}]
+# langchain_history = []
+# def chat(user_input,history):
+#     response = chain.invoke({"input": user_input, "history": langchain_history})
+#     langchain_history.append(HumanMessage(content=user_input))
+#     langchain_history.append(AIMessage(content=response))
+#     return "", history + [{"role":"user", "content":user_input},
+#                           {"role":"assistant", "content":response}]
+
+def clear_chat():
+    return "",[]
+
+page = gr.Blocks(
+    title="Chat with Einstein",
+    theme=gr.themes.Soft()
+)
+
+with page:
+    gr.Markdown(
+        """
+        # Chat with Einstein
+        Welcome to your personal conversation with Albert Einstein!
+        """
     )
-    print(f"Albert: {response}")
-    history.append(HumanMessage(content=user_input))
-    history.append(AIMessage(content=response))
 
-# page = gr.Blocks(
-#     title="Chat with Einstein",
-#     theme=gr.themes.Soft()
-# )
-#
-# with page:
-#     gr.Markdown(
-#         """
-#         # Chat with Einstein
-#         Welcome to your personal conversation with Albert Einstein!
-#         """
-#     )
-#
-#     chatbot = gr.Chatbot()
-#
-#     msg = gr.Textbox()
-#
-#     clear = gr.Button("Clear Chat")
-#
-#
-# page.launch(share=True)
+    chatbot = gr.Chatbot(type="messages",
+                         avatar_images=[None,"einstein.png"],
+                         show_label=False)
+
+    msg = gr.Textbox(show_label=False, placeholder="Ask Einstein anything...")
+
+    msg.submit(chat,[msg,chatbot], [msg,chatbot])
+
+    clear = gr.Button("Clear Chat", variant="Secondary")
+    clear.click(clear_chat,outputs=[msg,chatbot])
+
+
+page.launch(share=True)
